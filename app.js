@@ -251,8 +251,6 @@ const websitePanel = (() => {
       showIframe();
     };
 
-    els.websiteFrame.addEventListener('load', onLoad, { once: true });
-
     /* Hard timeout — site is slow or blocked silently */
     timer = setTimeout(() => {
       if (handled) return;
@@ -260,10 +258,13 @@ const websitePanel = (() => {
       setFallbackText('The site took too long to load. Open it in a new tab below.');
     }, CONFIG.EMBED_TIMEOUT_MS);
 
-    /* Kick off the load. Force a reset to about:blank first so the load
-       event fires reliably on repeated retries. */
+    /* Reset to about:blank first so the load event fires reliably on
+       retries, then navigate to the real URL in the next frame.
+       The listener is added inside the rAF so the about:blank load
+       event (which fires instantly) doesn't consume it. */
     try { els.websiteFrame.src = 'about:blank'; } catch (_) {}
     requestAnimationFrame(() => {
+      els.websiteFrame.addEventListener('load', onLoad, { once: true });
       els.websiteFrame.src = CONFIG.SITE_URL;
     });
   }
