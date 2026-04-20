@@ -49,7 +49,6 @@ const els = {
   nav:            $('#nav'),
   navBtns:        $$('.nav-btn[data-panel]'),
   connectBtn:     $('#connectDriveBtn'),
-  topbarTitle:    $('#topbarTitle'),
   logoLink:       $('#logoLink'),
 
   panels:         $$('.panel'),
@@ -87,9 +86,9 @@ function showPanel(name) {
   els.navBtns.forEach(b => {
     b.classList.toggle('active', b.dataset.panel === name);
   });
-  // topbar label
-  const label = name.charAt(0).toUpperCase() + name.slice(1);
-  els.topbarTitle.textContent = label;
+  // topbar label - removed
+  // const label = name.charAt(0).toUpperCase() + name.slice(1);
+  // els.topbarTitle.textContent = label;
 
   // close mobile nav
   els.sidebar.classList.remove('open');
