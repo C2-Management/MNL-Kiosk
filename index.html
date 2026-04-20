@@ -106,18 +106,12 @@
             <h2 id="gallery-title">Gallery</h2>
             <p id="galleryStatus" class="gallery-status">Loading images...</p>
           </div>
-          <div class="gallery-controls">
-            <button class="pill-btn sm" id="prevBtn" type="button" aria-label="Previous image">Prev</button>
-            <button class="pill-btn sm" id="nextBtn" type="button" aria-label="Next image">Next</button>
-          </div>
         </div>
 
         <div class="coverflow-stage" id="coverflowStage" aria-roledescription="carousel">
-          <button class="flow-arrow flow-arrow-left" id="flowArrowLeft"
-                  type="button" aria-label="Previous">‹</button>
           <div class="coverflow" id="coverflow" role="listbox"></div>
-          <button class="flow-arrow flow-arrow-right" id="flowArrowRight"
-                  type="button" aria-label="Next">›</button>
+          <button class="cf-nav-btn cf-nav-btn--prev" id="prevBtn" type="button" aria-label="Previous image">Prev</button>
+          <button class="cf-nav-btn cf-nav-btn--next" id="nextBtn" type="button" aria-label="Next image">Next</button>
         </div>
 
         <p class="gallery-tip">Use ← → keys, arrows, or drag to navigate. Click a side image to center it.</p>
