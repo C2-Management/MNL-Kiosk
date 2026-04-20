@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node build.js",
     "build:check": "node build.js --check",
-    "start": "node build.js && python3 -m http.server 8080",
+    "start": "node build.js && npx --yes serve .",
     "serve": "npx --yes serve ."
   },
   "engines": {

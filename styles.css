@@ -471,10 +471,10 @@ a { color: inherit; text-decoration: none; }
 .cf-item {
   position: absolute;
   top: 50%; left: 50%;
-  width: clamp(240px, 34vw, 420px);
-  height: clamp(280px, 46vh, 520px);
-  margin-left: calc(clamp(240px, 34vw, 420px) / -2);
-  margin-top:  calc(clamp(280px, 46vh, 520px) / -2);
+  width: clamp(300px, 44vw, 580px);
+  height: clamp(360px, 70vh, 740px);
+  margin-left: calc(clamp(300px, 44vw, 580px) / -2);
+  margin-top:  calc(clamp(360px, 70vh, 740px) / -2);
   background: #0a0a0a;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -482,10 +482,8 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 30px 60px rgba(0,0,0,0.6);
   cursor: pointer;
   transform-style: preserve-3d;
-  will-change: transform, opacity, filter;
-  transition: transform 560ms var(--ease),
-              opacity 560ms var(--ease),
-              filter  560ms var(--ease);
+  transition: transform 220ms var(--ease),
+              opacity 220ms var(--ease);
   backface-visibility: hidden;
 }
 
@@ -524,7 +522,7 @@ a { color: inherit; text-decoration: none; }
   border-radius: 50%;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  z-index: 5;
+  z-index: 1100;
   transition: background var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
 .flow-arrow:hover { background: var(--btn-hover); }
@@ -542,13 +540,14 @@ a { color: inherit; text-decoration: none; }
 #panel-gallery {
   padding: 0;
   gap: 0;
+  height: 100%;
 }
 
 #panel-gallery .coverflow-stage {
   flex: 1;
   border-radius: 0;
   border: none;
-  min-height: 100%;
+  min-height: 0;
 }
 
 /* =============================================================
@@ -577,10 +576,10 @@ a { color: inherit; text-decoration: none; }
 
   .coverflow-stage { min-height: 60vh; }
   .cf-item {
-    width: clamp(200px, 70vw, 320px);
-    height: clamp(260px, 58vh, 420px);
-    margin-left: calc(clamp(200px, 70vw, 320px) / -2);
-    margin-top:  calc(clamp(260px, 58vh, 420px) / -2);
+    width: clamp(240px, 82vw, 420px);
+    height: clamp(300px, 68vh, 560px);
+    margin-left: calc(clamp(240px, 82vw, 420px) / -2);
+    margin-top:  calc(clamp(300px, 68vh, 560px) / -2);
   }
 }
 

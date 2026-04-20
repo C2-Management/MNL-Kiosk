@@ -302,7 +302,7 @@ const coverflow = (() => {
   let dragStartX = 0;
   let dragStartIndex = 0;
 
-  const TX = 180;
+  const TX = 240;
   const TZ = 220;
   const RY = 28;
   const SCALE_STEP  = 0.12;
@@ -358,7 +358,6 @@ const coverflow = (() => {
     const im = document.createElement('img');
     im.src = img.src;
     im.alt = img.alt || `Image ${itemIndex + 1}`;
-    im.loading = 'lazy';
     im.referrerPolicy = 'no-referrer';
     im.style.width = '100%';
     im.style.height = '100%';
@@ -377,37 +376,25 @@ const coverflow = (() => {
     const n = images.length;
     if (!n || !els.coverflow) return;
 
-    for (let i = 0; i < n; i++) {
-      let offset = i - index;
-      if (offset >  n / 2) offset -= n;
-      if (offset < -n / 2) offset += n;
+    for (let d = -RENDER_BUFFER; d <= RENDER_BUFFER; d++) {
+      const i   = ((index + d) % n + n) % n;
+      const abs = Math.abs(d);
 
-      const abs = Math.abs(offset);
-      if (abs <= RENDER_BUFFER) {
-        loadImage(i);
-      }
+      loadImage(i);
+
+      const node    = items[i];
+      const tx      = d * TX;
+      const tz      = -abs * TZ;
+      const ry      = -d * RY;
+      const scale   = abs === 0 ? 1.25 : Math.max(MIN_SCALE, 1 - abs * SCALE_STEP);
+      const opacity = abs >= MAX_VISIBLE ? 0 : Math.max(MIN_OPACITY, 1 - abs * OPACITY_STEP);
+
+      node.style.transform    = `translate3d(${tx}px, 0, ${tz}px) rotateY(${ry}deg) scale(${scale})`;
+      node.style.opacity      = String(opacity);
+      node.style.zIndex       = String(1000 - abs);
+      node.style.pointerEvents = abs >= MAX_VISIBLE ? 'none' : 'auto';
+      node.classList.toggle('center', d === 0);
     }
-
-    items.forEach((node, i) => {
-      let offset = i - index;
-      if (offset >  n / 2) offset -= n;
-      if (offset < -n / 2) offset += n;
-
-      const abs = Math.abs(offset);
-      const tx = offset * TX;
-      const tz = -abs * TZ;
-      const ry = -offset * RY;
-      const scale   = Math.max(MIN_SCALE, 1 - abs * SCALE_STEP);
-      const opacity = abs > MAX_VISIBLE ? 0 : Math.max(MIN_OPACITY, 1 - abs * OPACITY_STEP);
-      const blur    = abs > 1 ? Math.min((abs - 1) * 1.4, 6) : 0;
-
-      node.style.transform = `translate3d(${tx}px, 0, ${tz}px) rotateY(${ry}deg) scale(${scale})`;
-      node.style.opacity   = String(opacity);
-      node.style.filter    = blur ? `blur(${blur}px)` : 'none';
-      node.style.zIndex    = String(1000 - abs);
-      node.style.pointerEvents = abs > MAX_VISIBLE ? 'none' : 'auto';
-      node.classList.toggle('center', offset === 0);
-    });
   }
 
   function next() { goTo(index + 1); }
@@ -600,34 +587,24 @@ const contactForm = (() => {
       submitBtn.disabled = true;
       submitBtn.textContent = 'Sending...';
 
-      try {
-        const response = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            firstName,
-            lastName,
-            email,
-            phone,
-            message,
-            to: 'chansen@tryc2.com'
-          })
-        });
+      // Simulate sending (for local testing)
+      console.log('Contact form submission:', {
+        firstName,
+        lastName,
+        email,
+        phone,
+        message,
+        to: 'chansen@tryc2.com'
+      });
 
-        if (response.ok) {
-          alert('Thank you! Your message has been sent.');
-          form.reset();
-          showPanel('home');
-        } else {
-          alert('Error sending message. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Error sending message. Please try again.');
-      } finally {
+      // Simulate async delay
+      setTimeout(() => {
+        alert('Thank you! Your message has been sent.');
+        form.reset();
+        showPanel('home');
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
-      }
+      }, 1000);
     });
   }
 
