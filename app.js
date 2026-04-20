@@ -59,15 +59,36 @@ const els = {
   flowArrowR:     $('#flowArrowRight'),
   stage:          $('#coverflowStage'),
   coverflow:      $('#coverflow'),
-
-  lightbox:       $('#lightbox'),
-  lightboxImg:    $('#lightboxImg'),
-  lightboxClose:  $('#lightboxClose'),
-  lightboxPrev:   $('#lightboxPrev'),
-  lightboxNext:   $('#lightboxNext'),
-  lightboxCounter:$('#lightboxCounter'),
 };
 
+/* Create lightbox if it doesn't exist */
+function initLightboxElements() {
+  if (!$('#lightbox')) {
+    const lightboxHTML = `
+      <div id="lightbox" class="lightbox" hidden>
+        <div class="lightbox-content">
+          <img id="lightboxImg" src="" alt="Full-size image">
+          <div class="lightbox-controls">
+            <button id="lightboxPrev" class="lightbox-btn prev" title="Previous">❮</button>
+            <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
+            <button id="lightboxNext" class="lightbox-btn next" title="Next">❯</button>
+            <button id="lightboxClose" class="lightbox-btn close" title="Close">✕</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', lightboxHTML);
+  }
+  
+  return {
+    lightbox:        $('#lightbox'),
+    lightboxImg:     $('#lightboxImg'),
+    lightboxClose:   $('#lightboxClose'),
+    lightboxPrev:    $('#lightboxPrev'),
+    lightboxNext:    $('#lightboxNext'),
+    lightboxCounter: $('#lightboxCounter'),
+  };
+}
 
 /* =============================================================
  * NAVIGATION / PANEL SWITCHING
@@ -456,6 +477,7 @@ const coverflow = (() => {
 const lightbox = (() => {
   let images = [];
   let currentIndex = 0;
+  let lbEls = {};
 
   function setImages(imageList) {
     images = imageList;
@@ -465,12 +487,12 @@ const lightbox = (() => {
     if (!images.length) return;
     currentIndex = index;
     updateImage();
-    els.lightbox.hidden = false;
-    document.body.style.overflow = 'hidden'; // Prevent scrolling
+    lbEls.lightbox.hidden = false;
+    document.body.style.overflow = 'hidden';
   }
 
   function close() {
-    els.lightbox.hidden = true;
+    lbEls.lightbox.hidden = true;
     document.body.style.overflow = '';
   }
 
@@ -488,30 +510,33 @@ const lightbox = (() => {
 
   function updateImage() {
     const img = images[currentIndex];
-    els.lightboxImg.src = img.src;
-    els.lightboxImg.alt = img.alt || `Image ${currentIndex + 1}`;
-    els.lightboxCounter.textContent = `${currentIndex + 1} / ${images.length}`;
+    lbEls.lightboxImg.src = img.src;
+    lbEls.lightboxImg.alt = img.alt || `Image ${currentIndex + 1}`;
+    lbEls.lightboxCounter.textContent = `${currentIndex + 1} / ${images.length}`;
   }
 
-  // Event listeners
-  els.lightboxClose.addEventListener('click', close);
-  els.lightboxPrev.addEventListener('click', prev);
-  els.lightboxNext.addEventListener('click', next);
+  function init() {
+    lbEls = initLightboxElements();
+    
+    if (!lbEls.lightbox) return;
 
-  // Close on background click
-  els.lightbox.addEventListener('click', (e) => {
-    if (e.target === els.lightbox) close();
-  });
+    lbEls.lightboxClose.addEventListener('click', close);
+    lbEls.lightboxPrev.addEventListener('click', prev);
+    lbEls.lightboxNext.addEventListener('click', next);
 
-  // Keyboard navigation
-  window.addEventListener('keydown', (e) => {
-    if (els.lightbox.hidden) return;
-    if (e.key === 'Escape') close();
-    if (e.key === 'ArrowLeft') prev();
-    if (e.key === 'ArrowRight') next();
-  });
+    lbEls.lightbox.addEventListener('click', (e) => {
+      if (e.target === lbEls.lightbox) close();
+    });
 
-  return { setImages, open, close };
+    window.addEventListener('keydown', (e) => {
+      if (lbEls.lightbox.hidden) return;
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowLeft') prev();
+      if (e.key === 'ArrowRight') next();
+    });
+  }
+
+  return { setImages, open, close, init };
 })();
 
 
@@ -616,6 +641,7 @@ const contactForm = (() => {
 /* =============================================================
  * STARTUP
  * ============================================================= */
+lightbox.init();
 contactForm.init();
 
 // Remove the home button as it's redundant with the logo
