@@ -59,6 +59,13 @@ const els = {
   flowArrowR:     $('#flowArrowRight'),
   stage:          $('#coverflowStage'),
   coverflow:      $('#coverflow'),
+
+  lightbox:       $('#lightbox'),
+  lightboxImg:    $('#lightboxImg'),
+  lightboxClose:  $('#lightboxClose'),
+  lightboxPrev:   $('#lightboxPrev'),
+  lightboxNext:   $('#lightboxNext'),
+  lightboxCounter:$('#lightboxCounter'),
 };
 
 
@@ -283,6 +290,7 @@ const coverflow = (() => {
   const OPACITY_STEP = 0.2;
   const MIN_OPACITY  = 0;
   const MAX_VISIBLE  = 5; // items per side that remain visible
+  const RENDER_BUFFER = 10; // render this many extra images on each side
 
   function setImages(list) {
     images = Array.isArray(list) ? list.filter(Boolean) : [];
@@ -292,45 +300,68 @@ const coverflow = (() => {
   }
 
   function build() {
-    console.log('[MZL] build() called with', images.length, 'images');
-    console.log('[MZL] els.coverflow:', els.coverflow);
     els.coverflow.innerHTML = '';
     items = [];
+
+    // Create placeholder items for all images
     images.forEach((img, i) => {
       const node = document.createElement('div');
       node.className = 'cf-item';
       node.setAttribute('role', 'option');
       node.dataset.index = String(i);
+      node.dataset.loaded = 'false';
 
-      const im = document.createElement('img');
-      im.src = img.src;
-      im.alt = img.alt || `Image ${i + 1}`;
-      im.loading = 'lazy';
-      im.referrerPolicy = 'no-referrer';
-
-      // fallback if image fails to load
-      im.addEventListener('error', () => {
-        console.warn(`Failed to load image: ${img.src}`);
-        im.style.display = 'none';
-      }, { once: true });
-
-      node.appendChild(im);
       node.addEventListener('click', () => {
-        if (i === index) return;
-        goTo(i);
+        if (i === index) {
+          openLightbox(i); // Open full-screen viewer on center image click
+        } else {
+          goTo(i);
+        }
       });
 
       els.coverflow.appendChild(node);
       items.push(node);
     });
-    console.log('[MZL] build() complete. Created', items.length, 'items');
+  }
+
+  function loadImage(itemIndex) {
+    const node = items[itemIndex];
+    if (!node || node.dataset.loaded === 'true') return;
+
+    const img = images[itemIndex];
+    const im = document.createElement('img');
+    im.src = img.src;
+    im.alt = img.alt || `Image ${itemIndex + 1}`;
+    im.loading = 'lazy';
+    im.referrerPolicy = 'no-referrer';
+
+    im.addEventListener('error', () => {
+      console.warn(`Failed to load image: ${img.src}`);
+      im.style.display = 'none';
+    }, { once: true });
+
+    node.appendChild(im);
+    node.dataset.loaded = 'true';
   }
 
   /* Render — compute each item's 3D transform relative to center */
   function render() {
     const n = images.length;
-    console.log('[MZL] render() called with', n, 'images, current index:', index);
     if (!n) return;
+
+    // Load images within render buffer range
+    for (let i = 0; i < n; i++) {
+      let offset = i - index;
+      if (offset >  n / 2) offset -= n;
+      if (offset < -n / 2) offset += n;
+
+      const abs = Math.abs(offset);
+
+      // Load images within the buffer range
+      if (abs <= RENDER_BUFFER) {
+        loadImage(i);
+      }
+    }
 
     items.forEach((node, i) => {
       // shortest signed distance (so it loops visually)
@@ -346,11 +377,7 @@ const coverflow = (() => {
       const opacity = abs > MAX_VISIBLE ? 0 : Math.max(MIN_OPACITY, 1 - abs * OPACITY_STEP);
       const blur    = abs > 1 ? Math.min((abs - 1) * 1.4, 6) : 0;
 
-      node.style.transform = `
-        translate3d(${tx}px, 0, ${tz}px)
-        rotateY(${ry}deg)
-        scale(${scale})
-      `;
+      node.style.transform = `translate3d(${tx}px, 0, ${tz}px) rotateY(${ry}deg) scale(${scale})`;
       node.style.opacity   = String(opacity);
       node.style.filter    = blur ? `blur(${blur}px)` : 'none';
       node.style.zIndex    = String(1000 - abs);
@@ -415,7 +442,76 @@ const coverflow = (() => {
   /* ---- Re-render on resize for responsiveness ---- */
   window.addEventListener('resize', () => render());
 
+  function openLightbox(i) {
+    lightbox.open(i);
+  }
+
   return { setImages, render, next, prev, goTo };
+})();
+
+
+/* =============================================================
+ * LIGHTBOX (Full-screen image viewer)
+ * ============================================================= */
+const lightbox = (() => {
+  let images = [];
+  let currentIndex = 0;
+
+  function setImages(imageList) {
+    images = imageList;
+  }
+
+  function open(index) {
+    if (!images.length) return;
+    currentIndex = index;
+    updateImage();
+    els.lightbox.hidden = false;
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+  }
+
+  function close() {
+    els.lightbox.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  function next() {
+    if (!images.length) return;
+    currentIndex = (currentIndex + 1) % images.length;
+    updateImage();
+  }
+
+  function prev() {
+    if (!images.length) return;
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    updateImage();
+  }
+
+  function updateImage() {
+    const img = images[currentIndex];
+    els.lightboxImg.src = img.src;
+    els.lightboxImg.alt = img.alt || `Image ${currentIndex + 1}`;
+    els.lightboxCounter.textContent = `${currentIndex + 1} / ${images.length}`;
+  }
+
+  // Event listeners
+  els.lightboxClose.addEventListener('click', close);
+  els.lightboxPrev.addEventListener('click', prev);
+  els.lightboxNext.addEventListener('click', next);
+
+  // Close on background click
+  els.lightbox.addEventListener('click', (e) => {
+    if (e.target === els.lightbox) close();
+  });
+
+  // Keyboard navigation
+  window.addEventListener('keydown', (e) => {
+    if (els.lightbox.hidden) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') prev();
+    if (e.key === 'ArrowRight') next();
+  });
+
+  return { setImages, open, close };
 })();
 
 
@@ -435,20 +531,19 @@ function setGalleryStatus(msg, isError = false) {
  * ============================================================= */
 (function loadLocalImages() {
   if (CONFIG.LOCAL_IMAGES?.length) {
-    console.log('[MZL] Loading', CONFIG.LOCAL_IMAGES.length, 'local images');
-    console.log('[MZL] First image:', CONFIG.LOCAL_IMAGES[0]);
     const imageList = CONFIG.LOCAL_IMAGES.map((src, i) => {
       const filename = src.split('/').pop().replace(/\.(jpg|jpeg|png|gif|webp|svg)$/i, '');
       return { src, alt: filename };
     });
-    console.log('[MZL] Mapped images:', imageList.slice(0, 3));
     coverflow.setImages(imageList);
-    console.log('[MZL] setImages called');
+    lightbox.setImages(imageList);
     setGalleryStatus(`Showing ${CONFIG.LOCAL_IMAGES.length} images.`);
   } else if (CONFIG.DEMO_IMAGES?.length) {
-    coverflow.setImages(CONFIG.DEMO_IMAGES.map((src, i) => ({
+    const demoList = CONFIG.DEMO_IMAGES.map((src, i) => ({
       src, alt: `Preview ${i + 1}`
-    })));
+    }));
+    coverflow.setImages(demoList);
+    lightbox.setImages(demoList);
     setGalleryStatus('Showing demo images.');
   } else {
     setGalleryStatus('No images available. Add images to the images/ folder and rebuild.');
