@@ -126,6 +126,17 @@
     </main>
   </div>
 
+  <!-- Lightbox for full-screen image viewing -->
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close">&times;</button>
+    <button class="lightbox-prev" id="lightboxPrev" type="button" aria-label="Previous">‹</button>
+    <button class="lightbox-next" id="lightboxNext" type="button" aria-label="Next">›</button>
+    <div class="lightbox-content">
+      <img id="lightboxImg" src="" alt="" />
+      <div class="lightbox-counter" id="lightboxCounter"></div>
+    </div>
+  </div>
+
   <!-- Config (edit this file to change embed URL, Drive keys, etc.) -->
   <script src="./config.js" defer></script>
   <!-- App logic -->
