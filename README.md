@@ -5,11 +5,11 @@ and JavaScript — no frameworks, no build step. Ships directly to GitHub Pages.
 
 Features:
 
-- Left sidebar navigation (Home / Website / Gallery / Connect Drive)
+- Left sidebar navigation (Home / Website / Gallery)
 - Top-right clickable logo that always returns Home
 - Embedded view of `https://www.mugznlugz.com` with a polished fallback
 - Premium 3D rolling coverflow gallery with keyboard, click, and drag support
-- Google Drive-powered image source (OAuth via Google Identity Services)
+- Local image gallery (automatically loads from images/ folder)
 - Fully responsive down to mobile
 
 ## File layout
@@ -21,11 +21,12 @@ Features:
 ├── app.js
 ├── config.js              <- GENERATED from .env — do not edit by hand
 ├── build.js               <- reads .env, writes config.js
-├── .env                   <- YOUR secrets (gitignored)
+├── .env                   <- YOUR config (gitignored)
 ├── .env.example           <- template for collaborators
 ├── package.json
 ├── assets/
 │   └── logo.png           <- drop your real logo here
+├── images/                <- drop gallery images here
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml     <- auto-deploys to GitHub Pages
@@ -54,9 +55,6 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080`.
 
-> Google Sign-In **requires HTTPS or `http://localhost`**. Opening `index.html`
-> via `file://` will block OAuth.
-
 ### How `.env` + `config.js` work together
 
 - **`.env`** is the source of truth for all configuration. It is listed in
@@ -65,15 +63,7 @@ Then open `http://localhost:8080`.
   browser actually loads.
 - For **local dev**, run `node build.js` whenever you change `.env`.
 - For **production**, the GitHub Actions workflow generates `config.js` at
-  deploy time using secrets from your repo settings — your real values never
-  touch the filesystem (see section 5).
-
-> **Security reality check:** this is a static site. Any value inside
-> `config.js` is visible to anyone who views the page source. `CLIENT_ID`
-> and `API_KEY` are *designed* to be public — real security comes from the
-> **HTTP-referrer / authorized-origin restrictions** you set in Google Cloud
-> Console. Don't put anything in `.env` that you wouldn't paste into a
-> public webpage.
+  deploy time using variables from your repo settings (see section 4).
 
 ## 2) Logo
 
@@ -81,50 +71,24 @@ Place your logo at `./assets/logo.png`. Transparent PNG or SVG-exported-PNG
 around **120–240px wide** looks best. If the logo file is missing, the top bar
 gracefully falls back to a text chip.
 
-## 3) Configure Google OAuth + Drive API
+## 3) Image Management
 
-Open `.env` and fill in these three values, then run `node build.js`:
+The gallery automatically loads all images from the `images/` folder.
 
-```ini
-CLIENT_ID=YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com
-API_KEY=YOUR_GOOGLE_API_KEY
-FOLDER_ID=YOUR_DRIVE_FOLDER_ID
-```
+### Adding Images
 
-### a. Create a Google Cloud project
+1. Add image files to the `images/` folder
+   - Supported formats: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.svg`
+2. Run `npm run build` to regenerate config.js
+3. Refresh the site - images will display immediately
 
-1. Go to <https://console.cloud.google.com/> and create a project.
-2. Enable **Google Drive API** under *APIs & Services → Library*.
+### Removing Images
 
-### b. Create an API Key
+1. Delete images from the `images/` folder
+2. Run `npm run build` to regenerate config.js
+3. Refresh the site
 
-1. *APIs & Services → Credentials → Create credentials → API key*.
-2. Restrict it to the **Google Drive API** (Application restrictions: HTTP referrers,
-   listing your GitHub Pages URL and `localhost`).
-
-### c. Create an OAuth 2.0 Client ID
-
-1. *Credentials → Create credentials → OAuth client ID → Web application*.
-2. Add **Authorized JavaScript origins**, for example:
-   - `http://localhost:8080`
-   - `http://127.0.0.1:8080`
-   - `https://<your-github-username>.github.io`
-   - If hosted from a project repo: `https://<your-github-username>.github.io`
-     (origin is the base host — the repo path does not go here).
-3. Copy the client ID into `CONFIG.CLIENT_ID`.
-
-### d. Drive Folder ID
-
-Open your Drive folder in the browser. The URL looks like:
-
-```
-https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUv
-```
-
-Paste the trailing ID into `CONFIG.FOLDER_ID`.
-
-Set folder sharing so your account (or anyone you intend to sign in) can
-read the files.
+The build script automatically scans the folder and generates the image list. No manual configuration needed.
 
 ## 4) Updating the embedded website URL
 
@@ -183,37 +147,28 @@ platforms the fallback card is the permanent solution.
 
 ## 5) Deploying to GitHub Pages
 
-You have two options. **Option A (Actions) is strongly recommended** —
-it keeps your real API keys out of the repo entirely.
+You have two options. **Option A (Actions) is recommended** for automatic deployments.
 
-### Option A — GitHub Actions (secrets-based, recommended)
+### Option A — GitHub Actions (recommended)
 
 1. Push this project to a GitHub repo (with `.env` **NOT** committed —
    `.gitignore` handles this).
 2. **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. **Settings → Secrets and variables → Actions** and add:
+3. (Optional) **Settings → Secrets and variables → Actions** to override config:
 
-   **Repository secrets** (encrypted):
-
-   - `CLIENT_ID`
-   - `API_KEY`
-   - `FOLDER_ID`
-
-   **Repository variables** (non-sensitive, optional overrides):
+   **Repository variables** (optional overrides):
 
    - `SITE_URL`
    - `FORCE_EMBED_FALLBACK`
    - `EMBED_TIMEOUT_MS`
    - `EMBED_PREVIEW_URL`
-   - `SCOPES`
    - `DEMO_IMAGES`
 
 4. Push to `main`. The included workflow (`.github/workflows/deploy.yml`)
-   runs `node build.js` with those values injected as env vars, generates
+   runs `node build.js`, scans the `images/` folder, generates
    `config.js`, and deploys.
 
-Your real credentials never touch the repo — they live in GitHub's encrypted
-secret store.
+Your images are committed to the repo and deployed with the site.
 
 ### Option B — Manual deploy (everything in the repo)
 
@@ -226,11 +181,6 @@ secret store.
 
 Your site will be at `https://<user>.github.io/<repo>/` (project site) or
 `https://<user>.github.io` (user site).
-
-### After deploying
-
-Add your live Pages URL to **Authorized JavaScript origins** in your Google
-OAuth client (e.g. `https://<user>.github.io` — origin only, no repo path).
 
 All internal paths are relative (`./styles.css`, `./app.js`,
 `./assets/logo.png`) so the site works correctly from any base path. The
@@ -269,12 +219,10 @@ Edit in one place — it propagates everywhere.
 
 ## 8) Troubleshooting
 
-- **“Drive is not configured.”** — Fill in `CLIENT_ID`, `API_KEY`, and
-  `FOLDER_ID` in `app.js`.
-- **Sign-in popup blocked** — The Connect Drive button must be clicked by the
-  user; browsers block programmatic popups.
-- **Images 404 after loading** — The Drive folder may not be shared with the
-  signed-in account, or the OAuth scope was denied.
+- **"No images available"** — Add images to the `images/` folder and run
+  `node build.js` to regenerate config.js.
+- **Images not showing after rebuild** — Make sure you refreshed the browser
+  (Cmd/Ctrl+Shift+R for hard refresh).
 - **Iframe shows fallback immediately** — The target site disables embedding.
   Click **Open Mugznlugz** to open it in a new tab.
 

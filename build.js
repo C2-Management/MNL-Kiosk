@@ -42,6 +42,20 @@ function parseEnv(text) {
   return env;
 }
 
+/* ---------- scan images folder ---------- */
+function scanImagesFolder() {
+  const imagesDir = path.join(ROOT, 'images');
+  if (!fs.existsSync(imagesDir)) return [];
+
+  const files = fs.readdirSync(imagesDir);
+  const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+
+  return files
+    .filter(f => imageExts.some(ext => f.toLowerCase().endsWith(ext)))
+    .sort()
+    .map(f => `./images/${f}`);
+}
+
 /* ---------- read sources ---------- */
 let envText = '';
 try {
@@ -92,26 +106,18 @@ const config = {
   EMBED_TIMEOUT_MS:     num('EMBED_TIMEOUT_MS', 3500),
   EMBED_PREVIEW_URL:    str('EMBED_PREVIEW_URL', ''),
 
-  CLIENT_ID:            str('CLIENT_ID'),
-  API_KEY:              str('API_KEY'),
-  FOLDER_ID:            str('FOLDER_ID'),
-  SCOPES:               str('SCOPES', 'https://www.googleapis.com/auth/drive.readonly'),
-
+  LOCAL_IMAGES:         scanImagesFolder(),
   DEMO_IMAGES:          list('DEMO_IMAGES'),
 };
 
 /* ---------- --check mode ---------- */
 if (CHECK_MODE) {
-  const missing = [];
-  if (config.CLIENT_ID.startsWith('YOUR_')) missing.push('CLIENT_ID');
-  if (config.API_KEY.startsWith('YOUR_'))   missing.push('API_KEY');
-  if (config.FOLDER_ID.startsWith('YOUR_')) missing.push('FOLDER_ID');
-
-  if (missing.length) {
-    console.error(`[build --check] Missing or placeholder values: ${missing.join(', ')}`);
+  // Check if we have images
+  if (!config.LOCAL_IMAGES.length && !config.DEMO_IMAGES.length) {
+    console.error('[build --check] No images found. Add images to images/ folder or set DEMO_IMAGES.');
     process.exit(1);
   }
-  console.log('[build --check] .env looks good.');
+  console.log(`[build --check] Config looks good. Found ${config.LOCAL_IMAGES.length} local images.`);
   process.exit(0);
 }
 

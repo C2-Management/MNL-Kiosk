@@ -18,22 +18,14 @@
  * safe defaults so the app still boots even if config.js is
  * missing or a field is left blank. */
 const DEFAULTS = {
-  CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
-  API_KEY:   'YOUR_GOOGLE_API_KEY',
-  FOLDER_ID: 'YOUR_DRIVE_FOLDER_ID',
-  SCOPES:    'https://www.googleapis.com/auth/drive.readonly',
   SITE_URL:  'https://www.mugznlugz.com',
   FORCE_EMBED_FALLBACK: false,
   EMBED_TIMEOUT_MS: 3500,
   EMBED_PREVIEW_URL: 'https://s.wordpress.com/mshots/v1/{url}?w=1280&h=800',
+  LOCAL_IMAGES: [],
   DEMO_IMAGES: [],
 };
 const CONFIG = Object.assign({}, DEFAULTS, window.MZL_CONFIG || {});
-
-/* Google API endpoints */
-const GAPI_SRC = 'https://apis.google.com/js/api.js';
-const GIS_SRC  = 'https://accounts.google.com/gsi/client';
-const DISCOVERY = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 
 
 /* =============================================================
@@ -48,7 +40,6 @@ const els = {
   menuToggle:     $('#menuToggle'),
   nav:            $('#nav'),
   navBtns:        $$('.nav-btn[data-panel]'),
-  connectBtn:     $('#connectDriveBtn'),
   logoLink:       $('#logoLink'),
 
   panels:         $$('.panel'),
@@ -68,9 +59,6 @@ const els = {
   flowArrowR:     $('#flowArrowRight'),
   stage:          $('#coverflowStage'),
   coverflow:      $('#coverflow'),
-
-  driveLed:       $('#driveLed'),
-  driveStatusText:$('#driveStatusText'),
 };
 
 
@@ -324,9 +312,10 @@ const coverflow = (() => {
       im.loading = 'lazy';
       im.referrerPolicy = 'no-referrer';
 
-      // fallback if a Drive thumbnail fails to load
+      // fallback if image fails to load
       im.addEventListener('error', () => {
-        im.src = makeDriveThumbFallback(img);
+        console.warn(`Failed to load image: ${img.src}`);
+        im.style.display = 'none';
       }, { once: true });
 
       node.appendChild(im);
@@ -338,14 +327,6 @@ const coverflow = (() => {
       els.coverflow.appendChild(node);
       items.push(node);
     });
-  }
-
-  /* If thumbnailLink fails we have a backup URL stored on the item */
-  function makeDriveThumbFallback(img) {
-    if (img.driveId) {
-      return `https://drive.google.com/thumbnail?id=${img.driveId}&sz=w1600`;
-    }
-    return img.src;
   }
 
   /* Render — compute each item's 3D transform relative to center */
@@ -448,184 +429,28 @@ function setGalleryStatus(msg, isError = false) {
   els.galleryStatus.classList.toggle('error', !!isError);
 }
 
-function setDriveIndicator(state /* 'on' | 'off' | 'error' */, text) {
-  els.driveLed.classList.remove('on', 'error');
-  if (state === 'on')    els.driveLed.classList.add('on');
-  if (state === 'error') els.driveLed.classList.add('error');
-  if (text) els.driveStatusText.textContent = text;
-}
-
 
 /* =============================================================
  * INITIAL GALLERY STATE
  * -------------------------------------------------------------
- * If DEMO_IMAGES is populated, we show them immediately so the
- * coverflow never looks empty. Connecting Drive replaces them.
+ * Load images from local folder at startup.
  * ============================================================= */
-(function seedDemo() {
-  if (CONFIG.DEMO_IMAGES?.length) {
+(function loadLocalImages() {
+  if (CONFIG.LOCAL_IMAGES?.length) {
+    coverflow.setImages(CONFIG.LOCAL_IMAGES.map((src, i) => {
+      const filename = src.split('/').pop().replace(/\.(jpg|jpeg|png|gif|webp|svg)$/i, '');
+      return { src, alt: filename };
+    }));
+    setGalleryStatus(`Showing ${CONFIG.LOCAL_IMAGES.length} images.`);
+  } else if (CONFIG.DEMO_IMAGES?.length) {
     coverflow.setImages(CONFIG.DEMO_IMAGES.map((src, i) => ({
       src, alt: `Preview ${i + 1}`
     })));
-    setGalleryStatus('Showing demo images. Connect Drive to load yours.');
+    setGalleryStatus('Showing demo images.');
   } else {
-    setGalleryStatus('Connect Drive to load images.');
+    setGalleryStatus('No images available. Add images to the images/ folder and rebuild.');
   }
 })();
-
-
-/* =============================================================
- * GOOGLE DRIVE INTEGRATION
- * -------------------------------------------------------------
- * Scripts are loaded lazily on first Connect Drive click so the
- * site stays fast for users who never sign in.
- * ============================================================= */
-const drive = (() => {
-  let gapiReady = false;
-  let gisReady  = false;
-  let tokenClient = null;
-  let accessToken = null;
-  let loading = false;
-
-  function loadScript(src) {
-    return new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${src}"]`)) return resolve();
-      const s = document.createElement('script');
-      s.src = src;
-      s.async = true;
-      s.defer = true;
-      s.onload = resolve;
-      s.onerror = () => reject(new Error(`Failed to load ${src}`));
-      document.head.appendChild(s);
-    });
-  }
-
-  async function ensureLibs() {
-    if (gapiReady && gisReady) return;
-
-    setGalleryStatus('Loading Google libraries…');
-
-    await Promise.all([
-      loadScript(GAPI_SRC),
-      loadScript(GIS_SRC),
-    ]);
-
-    // init gapi.client
-    await new Promise((res, rej) => {
-      gapi.load('client', { callback: res, onerror: () => rej(new Error('gapi load failed')) });
-    });
-    await gapi.client.init({
-      apiKey: CONFIG.API_KEY,
-      discoveryDocs: [DISCOVERY],
-    });
-    gapiReady = true;
-
-    // init GIS token client
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CONFIG.CLIENT_ID,
-      scope: CONFIG.SCOPES,
-      callback: () => {}, // set per-request below
-    });
-    gisReady = true;
-  }
-
-  async function connect() {
-    if (loading) return;
-    loading = true;
-
-    // guard against missing config
-    if (!CONFIG.CLIENT_ID || CONFIG.CLIENT_ID.startsWith('YOUR_') ||
-        !CONFIG.API_KEY  || CONFIG.API_KEY.startsWith('YOUR_')  ||
-        !CONFIG.FOLDER_ID || CONFIG.FOLDER_ID.startsWith('YOUR_')) {
-      setGalleryStatus('Drive is not configured. Edit CONFIG in app.js.', true);
-      setDriveIndicator('error', 'Drive: not configured');
-      loading = false;
-      return;
-    }
-
-    try {
-      await ensureLibs();
-    } catch (err) {
-      console.error(err);
-      setGalleryStatus('Couldn’t load Google libraries. Check your connection.', true);
-      setDriveIndicator('error', 'Drive: network error');
-      loading = false;
-      return;
-    }
-
-    // request an access token
-    tokenClient.callback = async (resp) => {
-      if (resp.error) {
-        console.error(resp);
-        setGalleryStatus('Google sign-in failed. Please try again.', true);
-        setDriveIndicator('error', 'Drive: sign-in failed');
-        loading = false;
-        return;
-      }
-      accessToken = resp.access_token;
-      setDriveIndicator('on', 'Drive: connected');
-      await loadImages();
-      loading = false;
-    };
-
-    // prompt user
-    try {
-      if (accessToken) {
-        tokenClient.requestAccessToken({ prompt: '' });
-      } else {
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-      }
-      setGalleryStatus('Waiting for Google sign-in…');
-    } catch (err) {
-      console.error(err);
-      setGalleryStatus('Unable to start sign-in.', true);
-      setDriveIndicator('error', 'Drive: sign-in error');
-      loading = false;
-    }
-  }
-
-  async function loadImages() {
-    setGalleryStatus('Loading images…');
-    try {
-      const res = await gapi.client.drive.files.list({
-        q: `'${CONFIG.FOLDER_ID}' in parents and mimeType contains 'image/' and trashed = false`,
-        fields: 'files(id, name, mimeType, thumbnailLink, webContentLink)',
-        pageSize: 200,
-        orderBy: 'name',
-      });
-
-      const files = res?.result?.files || [];
-      if (!files.length) {
-        setGalleryStatus('No images found in this Drive folder.');
-        coverflow.setImages([]);
-        return;
-      }
-
-      const images = files.map(f => {
-        // thumbnailLink default is ~220px; upgrade it.
-        const thumb = f.thumbnailLink
-          ? f.thumbnailLink.replace(/=s\d+(-[a-z])?$/i, '=s1600')
-          : `https://drive.google.com/thumbnail?id=${f.id}&sz=w1600`;
-        return { src: thumb, alt: f.name, driveId: f.id };
-      });
-
-      coverflow.setImages(images);
-      setGalleryStatus(`Loaded ${images.length} image${images.length === 1 ? '' : 's'} from Drive.`);
-    } catch (err) {
-      console.error(err);
-      setGalleryStatus('Failed to load images from Drive.', true);
-      setDriveIndicator('error', 'Drive: load failed');
-    }
-  }
-
-  return { connect };
-})();
-
-els.connectBtn.addEventListener('click', () => {
-  // Keep user oriented: jump to the gallery when they connect.
-  showPanel('gallery');
-  drive.connect();
-});
 
 
 /* =============================================================
