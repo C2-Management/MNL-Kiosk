@@ -65,14 +65,14 @@ const els = {
 function initLightboxElements() {
   if (!$('#lightbox')) {
     const lightboxHTML = `
-      <div id="lightbox" class="lightbox" hidden>
-        <div class="lightbox-content">
-          <img id="lightboxImg" src="" alt="Full-size image">
-          <div class="lightbox-controls">
-            <button id="lightboxPrev" class="lightbox-btn prev" title="Previous">❮</button>
-            <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
-            <button id="lightboxNext" class="lightbox-btn next" title="Next">❯</button>
-            <button id="lightboxClose" class="lightbox-btn close" title="Close">✕</button>
+      <div id="lightbox" class="lightbox" hidden style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div class="lightbox-content" style="position: relative; width: 90%; height: 90%; display: flex; align-items: center; justify-content: center;">
+          <img id="lightboxImg" src="" alt="Full-size image" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+          <div class="lightbox-controls" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; align-items: center;">
+            <button id="lightboxPrev" class="lightbox-btn prev" title="Previous" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.5); color: white; padding: 10px 15px; font-size: 20px; cursor: pointer; border-radius: 4px; transition: background 0.2s;">❮</button>
+            <div id="lightboxCounter" style="color: white; font-size: 14px; min-width: 60px; text-align: center;">1 / 1</div>
+            <button id="lightboxNext" class="lightbox-btn next" title="Next" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.5); color: white; padding: 10px 15px; font-size: 20px; cursor: pointer; border-radius: 4px; transition: background 0.2s;">❯</button>
+            <button id="lightboxClose" class="lightbox-btn close" title="Close" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.5); color: white; padding: 10px 15px; font-size: 20px; cursor: pointer; border-radius: 4px; transition: background 0.2s;">✕</button>
           </div>
         </div>
       </div>
