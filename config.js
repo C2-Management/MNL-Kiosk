@@ -8,7 +8,7 @@
 
 window.MZL_CONFIG = {
   "SITE_URL": "https://www.mugznlugz.com",
-  "FORCE_EMBED_FALLBACK": false,
+  "FORCE_EMBED_FALLBACK": true,
   "EMBED_TIMEOUT_MS": 3500,
   "EMBED_PREVIEW_URL": "https://s.wordpress.com/mshots/v1/{url}?w=1280&h=800",
   "LOCAL_IMAGES": [
