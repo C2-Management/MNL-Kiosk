@@ -298,6 +298,8 @@ const coverflow = (() => {
   }
 
   function build() {
+    console.log('[MZL] build() called with', images.length, 'images');
+    console.log('[MZL] els.coverflow:', els.coverflow);
     els.coverflow.innerHTML = '';
     items = [];
     images.forEach((img, i) => {
@@ -327,11 +329,13 @@ const coverflow = (() => {
       els.coverflow.appendChild(node);
       items.push(node);
     });
+    console.log('[MZL] build() complete. Created', items.length, 'items');
   }
 
   /* Render — compute each item's 3D transform relative to center */
   function render() {
     const n = images.length;
+    console.log('[MZL] render() called with', n, 'images, current index:', index);
     if (!n) return;
 
     items.forEach((node, i) => {
@@ -437,10 +441,15 @@ function setGalleryStatus(msg, isError = false) {
  * ============================================================= */
 (function loadLocalImages() {
   if (CONFIG.LOCAL_IMAGES?.length) {
-    coverflow.setImages(CONFIG.LOCAL_IMAGES.map((src, i) => {
+    console.log('[MZL] Loading', CONFIG.LOCAL_IMAGES.length, 'local images');
+    console.log('[MZL] First image:', CONFIG.LOCAL_IMAGES[0]);
+    const imageList = CONFIG.LOCAL_IMAGES.map((src, i) => {
       const filename = src.split('/').pop().replace(/\.(jpg|jpeg|png|gif|webp|svg)$/i, '');
       return { src, alt: filename };
-    }));
+    });
+    console.log('[MZL] Mapped images:', imageList.slice(0, 3));
+    coverflow.setImages(imageList);
+    console.log('[MZL] setImages called');
     setGalleryStatus(`Showing ${CONFIG.LOCAL_IMAGES.length} images.`);
   } else if (CONFIG.DEMO_IMAGES?.length) {
     coverflow.setImages(CONFIG.DEMO_IMAGES.map((src, i) => ({
