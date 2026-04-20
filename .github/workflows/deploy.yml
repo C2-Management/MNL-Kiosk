@@ -1,0 +1,58 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Build config.js from GitHub Secrets.
+      # Add these secrets under: Settings → Secrets and variables → Actions.
+      - name: Build config.js from secrets
+        env:
+          SITE_URL:             ${{ vars.SITE_URL || 'https://www.mugznlugz.com' }}
+          FORCE_EMBED_FALLBACK: ${{ vars.FORCE_EMBED_FALLBACK || 'false' }}
+          EMBED_TIMEOUT_MS:     ${{ vars.EMBED_TIMEOUT_MS || '3500' }}
+          EMBED_PREVIEW_URL:    ${{ vars.EMBED_PREVIEW_URL || 'https://www.mugznlugz.com' }}
+          CLIENT_ID:            ${{ secrets.CLIENT_ID }}
+          API_KEY:              ${{ secrets.API_KEY }}
+          FOLDER_ID:            ${{ secrets.FOLDER_ID }}
+          SCOPES:               ${{ vars.SCOPES || 'https://www.googleapis.com/auth/drive.readonly' }}
+          DEMO_IMAGES:          ${{ vars.DEMO_IMAGES }}
+        run: node build.js
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

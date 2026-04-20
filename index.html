@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mugznlugz — Portal</title>
+  <meta name="description" content="Mugznlugz — sleek black luxury portal with embedded site and Drive-powered gallery." />
+  <link rel="icon" href="./assets/logo.png" type="image/png" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- ============================= -->
+    <!--           SIDEBAR             -->
+    <!-- ============================= -->
+    <aside class="sidebar" aria-label="Primary navigation">
+      <div class="sidebar-brand">
+        <span class="brand-mark">MZL</span>
+        <span class="brand-name">Mugznlugz</span>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav-btn active" data-panel="home" type="button">
+          <span class="nav-dot"></span><span>Home</span>
+        </button>
+        <button class="nav-btn" data-panel="website" type="button">
+          <span class="nav-dot"></span><span>Website</span>
+        </button>
+        <button class="nav-btn" data-panel="gallery" type="button">
+          <span class="nav-dot"></span><span>Gallery</span>
+        </button>
+        <button class="nav-btn" id="connectDriveBtn" type="button">
+          <span class="nav-dot"></span><span>Connect Drive</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-row">
+          <span class="status-led" id="driveLed" aria-hidden="true"></span>
+          <span id="driveStatusText">Drive: not connected</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============================= -->
+    <!--         MAIN CONTENT          -->
+    <!-- ============================= -->
+    <main class="main">
+
+      <!-- Top bar -->
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" type="button">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-title" id="topbarTitle">Home</div>
+        <a href="#home" class="logo-link" id="logoLink" aria-label="Return to Home">
+          <img
+            src="./assets/logo.png"
+            alt="Mugznlugz"
+            class="logo-img"
+            id="logoImg"
+            onerror="this.onerror=null; this.style.display='none'; document.getElementById('logoFallback').style.display='inline-flex';"
+          />
+          <span class="logo-fallback" id="logoFallback">Mugznlugz</span>
+        </a>
+      </header>
+
+      <!-- ============================= -->
+      <!--         HOME PANEL            -->
+      <!-- ============================= -->
+      <section class="panel active" id="panel-home" aria-labelledby="home-title">
+        <div class="welcome-card">
+          <div class="welcome-glow" aria-hidden="true"></div>
+          <h1 id="home-title" class="welcome-title">Welcome to Mugznlugz</h1>
+          <p class="welcome-sub">
+            Your private, blacked-out portal. Browse the site, roll through the gallery,
+            and connect your Drive to surface your latest work — all from one sleek place.
+          </p>
+          <div class="welcome-cta">
+            <button class="pill-btn" data-panel="website" type="button">Open Website</button>
+            <button class="pill-btn ghost" data-panel="gallery" type="button">Enter Gallery</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================= -->
+      <!--       WEBSITE PANEL           -->
+      <!-- ============================= -->
+      <section class="panel" id="panel-website" aria-labelledby="website-title">
+        <h2 id="website-title" class="sr-only">Embedded website</h2>
+        <div class="website-shell">
+          <iframe
+            id="websiteFrame"
+            class="website-frame"
+            src="about:blank"
+            title="Mugznlugz website"
+            referrerpolicy="no-referrer-when-downgrade"
+            loading="lazy"
+            allow="autoplay; clipboard-read; clipboard-write; fullscreen; payment"
+          ></iframe>
+
+          <!-- Fallback card shown if embedding is blocked -->
+          <div class="website-fallback" id="websiteFallback" hidden>
+            <div class="fallback-inner">
+              <img id="fallbackPreview" class="fallback-preview" alt="" hidden />
+              <h3>Site preview unavailable</h3>
+              <p id="fallbackText">
+                This website prevents embedded previews. Tap below to open it in a new tab.
+              </p>
+              <div class="fallback-actions">
+                <a class="pill-btn" id="openSiteBtn" href="https://www.mugznlugz.com"
+                   target="_blank" rel="noopener noreferrer">Open Mugznlugz</a>
+                <button class="pill-btn ghost" id="copyLinkBtn" type="button">Copy link</button>
+                <button class="pill-btn ghost" id="retryEmbedBtn" type="button">Retry embed</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================= -->
+      <!--        GALLERY PANEL          -->
+      <!-- ============================= -->
+      <section class="panel" id="panel-gallery" aria-labelledby="gallery-title">
+        <div class="gallery-header">
+          <div class="gallery-heading">
+            <h2 id="gallery-title">Gallery</h2>
+            <p id="galleryStatus" class="gallery-status">Connect Drive to load images.</p>
+          </div>
+          <div class="gallery-controls">
+            <button class="pill-btn sm" id="prevBtn" type="button" aria-label="Previous image">Prev</button>
+            <button class="pill-btn sm" id="nextBtn" type="button" aria-label="Next image">Next</button>
+          </div>
+        </div>
+
+        <div class="coverflow-stage" id="coverflowStage" aria-roledescription="carousel">
+          <button class="flow-arrow flow-arrow-left" id="flowArrowLeft"
+                  type="button" aria-label="Previous">‹</button>
+          <div class="coverflow" id="coverflow" role="listbox"></div>
+          <button class="flow-arrow flow-arrow-right" id="flowArrowRight"
+                  type="button" aria-label="Next">›</button>
+        </div>
+
+        <p class="gallery-tip">Use ← → keys, arrows, or drag to navigate. Click a side image to center it.</p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Config (edit this file to change embed URL, Drive keys, etc.) -->
+  <script src="./config.js" defer></script>
+  <!-- App logic -->
+  <script src="./app.js" defer></script>
+</body>
+</html>

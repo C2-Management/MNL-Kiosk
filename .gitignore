@@ -1,0 +1,23 @@
+# Local environment — never commit
+.env
+.env.local
+.env.*.local
+
+# Generated config (recreated by build.js from .env)
+# Commit config.js only if you don't want to use the build step.
+# If you're using the GitHub Actions deploy workflow, uncomment:
+# config.js
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
