@@ -295,23 +295,22 @@ websitePanel.init();
  * 3D COVERFLOW GALLERY
  * ============================================================= */
 const coverflow = (() => {
-  let images = [];        // array of { src, alt }
-  let index  = 0;         // current centered index
-  let items  = [];        // DOM nodes
+  let images = [];
+  let index  = 0;
+  let items  = [];
   let dragging = false;
   let dragStartX = 0;
   let dragStartIndex = 0;
 
-  /* Transform tuning */
-  const TX = 180;   // horizontal spacing per step (px)
-  const TZ = 220;   // depth per step (px)
-  const RY = 28;    // rotation per step (deg)
+  const TX = 180;
+  const TZ = 220;
+  const RY = 28;
   const SCALE_STEP  = 0.12;
   const MIN_SCALE   = 0.5;
   const OPACITY_STEP = 0.2;
   const MIN_OPACITY  = 0;
-  const MAX_VISIBLE  = 5; // items per side that remain visible
-  const RENDER_BUFFER = 10; // render this many extra images on each side
+  const MAX_VISIBLE  = 5;
+  const RENDER_BUFFER = 10;
 
   function setImages(list) {
     images = Array.isArray(list) ? list.filter(Boolean) : [];
@@ -321,10 +320,14 @@ const coverflow = (() => {
   }
 
   function build() {
+    if (!els.coverflow) {
+      console.error('[MZL] coverflow element not found in DOM');
+      return;
+    }
+    
     els.coverflow.innerHTML = '';
     items = [];
 
-    // Create placeholder items for all images
     images.forEach((img, i) => {
       const node = document.createElement('div');
       node.className = 'cf-item';
@@ -334,7 +337,7 @@ const coverflow = (() => {
 
       node.addEventListener('click', () => {
         if (i === index) {
-          openLightbox(i); // Open full-screen viewer on center image click
+          lightbox.open(i);
         } else {
           goTo(i);
         }
@@ -343,6 +346,8 @@ const coverflow = (() => {
       els.coverflow.appendChild(node);
       items.push(node);
     });
+    
+    console.log('[MZL] Built', items.length, 'carousel items');
   }
 
   function loadImage(itemIndex) {
@@ -355,6 +360,9 @@ const coverflow = (() => {
     im.alt = img.alt || `Image ${itemIndex + 1}`;
     im.loading = 'lazy';
     im.referrerPolicy = 'no-referrer';
+    im.style.width = '100%';
+    im.style.height = '100%';
+    im.style.objectFit = 'cover';
 
     im.addEventListener('error', () => {
       console.warn(`Failed to load image: ${img.src}`);
@@ -365,27 +373,22 @@ const coverflow = (() => {
     node.dataset.loaded = 'true';
   }
 
-  /* Render — compute each item's 3D transform relative to center */
   function render() {
     const n = images.length;
-    if (!n) return;
+    if (!n || !els.coverflow) return;
 
-    // Load images within render buffer range
     for (let i = 0; i < n; i++) {
       let offset = i - index;
       if (offset >  n / 2) offset -= n;
       if (offset < -n / 2) offset += n;
 
       const abs = Math.abs(offset);
-
-      // Load images within the buffer range
       if (abs <= RENDER_BUFFER) {
         loadImage(i);
       }
     }
 
     items.forEach((node, i) => {
-      // shortest signed distance (so it loops visually)
       let offset = i - index;
       if (offset >  n / 2) offset -= n;
       if (offset < -n / 2) offset += n;
@@ -413,59 +416,53 @@ const coverflow = (() => {
   function goTo(i) {
     const n = images.length;
     if (!n) return;
-    // infinite loop
     index = ((i % n) + n) % n;
     render();
   }
 
-  /* ---- Drag / swipe support ---- */
   function onPointerDown(e) {
     if (!images.length) return;
     dragging = true;
     dragStartX = (e.touches ? e.touches[0].clientX : e.clientX);
     dragStartIndex = index;
-    els.stage.setPointerCapture?.(e.pointerId);
+    els.stage?.setPointerCapture?.(e.pointerId);
   }
+  
   function onPointerMove(e) {
     if (!dragging) return;
     const x = (e.touches ? e.touches[0].clientX : e.clientX);
     const delta = x - dragStartX;
-    const step = Math.round(-delta / 90); // 90px per item
+    const step = Math.round(-delta / 90);
     if (step !== 0) {
       goTo(dragStartIndex + step);
       dragStartX = x;
       dragStartIndex = index;
     }
   }
+  
   function onPointerUp() {
     dragging = false;
   }
 
-  els.stage.addEventListener('pointerdown', onPointerDown);
-  els.stage.addEventListener('pointermove', onPointerMove);
+  if (els.stage) {
+    els.stage.addEventListener('pointerdown', onPointerDown);
+    els.stage.addEventListener('pointermove', onPointerMove);
+  }
   window.addEventListener('pointerup',   onPointerUp);
   window.addEventListener('pointercancel', onPointerUp);
 
-  /* ---- Control bindings ---- */
-  els.prevBtn.addEventListener('click', prev);
-  els.nextBtn.addEventListener('click', next);
-  els.flowArrowL.addEventListener('click', prev);
-  els.flowArrowR.addEventListener('click', next);
+  if (els.prevBtn) els.prevBtn.addEventListener('click', prev);
+  if (els.nextBtn) els.nextBtn.addEventListener('click', next);
+  if (els.flowArrowL) els.flowArrowL.addEventListener('click', prev);
+  if (els.flowArrowR) els.flowArrowR.addEventListener('click', next);
 
-  /* ---- Keyboard ---- */
   window.addEventListener('keydown', (e) => {
-    // only when gallery panel is active
-    if (!$('#panel-gallery').classList.contains('active')) return;
+    if (!$('#panel-gallery')?.classList.contains('active')) return;
     if (e.key === 'ArrowLeft')  { e.preventDefault(); prev(); }
     if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
   });
 
-  /* ---- Re-render on resize for responsiveness ---- */
   window.addEventListener('resize', () => render());
-
-  function openLightbox(i) {
-    lightbox.open(i);
-  }
 
   return { setImages, render, next, prev, goTo };
 })();
