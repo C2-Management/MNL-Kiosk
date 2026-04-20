@@ -161,7 +161,6 @@ const websitePanel = (() => {
   /* Minimum "real load" time in ms. X-Frame-Options / CSP blocks cause
      Chrome's internal error page to render almost instantly (typically
      under 100ms). Real page loads are at least a few hundred ms. */
-  const BLOCK_THRESHOLD_MS = 350;
 
   function buildPreviewUrl() {
     if (!CONFIG.EMBED_PREVIEW_URL) return '';
@@ -198,10 +197,7 @@ const websitePanel = (() => {
     handled = false;
     clearTimeout(timer);
 
-    /* Always show the fallback first. If the iframe turns out to load a
-       real cross-origin page, we reveal it on top. If it doesn't, the
-       user never sees Chrome's white "refused to connect" page. */
-    showFallback('Checking embed compatibility…');
+    showFallback('Loading…');
     els.websiteFrame.classList.remove('is-ready');
 
     if (CONFIG.FORCE_EMBED_FALLBACK) {
@@ -209,64 +205,31 @@ const websitePanel = (() => {
       return;
     }
 
-    const t0 = performance.now();
-
     const onLoad = () => {
       if (handled) return;
       handled = true;
       clearTimeout(timer);
-      const elapsed = performance.now() - t0;
 
-      /* Heuristic #1: suspiciously fast load = browser block */
-      if (elapsed < BLOCK_THRESHOLD_MS) {
-        setFallbackText('This site blocks embedded previews. Open it in a new tab below.');
-        return;
-      }
-
-      /* Heuristic #2: try to peek at contentDocument. For a real
-         cross-origin site this will throw SecurityError (good — means
-         the site actually loaded). For a browser-rendered error page
-         on same-origin, doc will be accessible and either empty or
-         about:blank. */
+      /* contentDocument access throws SecurityError for any cross-origin
+         page — that's our reliable signal the real site loaded.
+         If it doesn't throw, the iframe contains a same-origin browser
+         error page (X-Frame-Options block, network error, etc.). */
       try {
-        const win = els.websiteFrame.contentWindow;
-        const doc = els.websiteFrame.contentDocument;
-        if (doc) {
-          const href = (win && win.location && win.location.href) || '';
-          if (!href || href === 'about:blank') {
-            setFallbackText('This site blocks embedded previews. Open it in a new tab below.');
-            return;
-          }
-          const bodyText = (doc.body && doc.body.textContent || '').trim();
-          if (!bodyText && (!doc.body || doc.body.children.length === 0)) {
-            setFallbackText('This site blocks embedded previews. Open it in a new tab below.');
-            return;
-          }
-        }
+        void els.websiteFrame.contentDocument;
+        setFallbackText('This site blocks embedded previews. Open it in a new tab below.');
       } catch (_) {
-        /* SecurityError — cross-origin site loaded successfully. */
+        showIframe();
       }
-
-      /* Passed all checks — reveal the real embed. */
-      showIframe();
     };
 
-    /* Hard timeout — site is slow or blocked silently */
     timer = setTimeout(() => {
       if (handled) return;
       handled = true;
       setFallbackText('The site took too long to load. Open it in a new tab below.');
     }, CONFIG.EMBED_TIMEOUT_MS);
 
-    /* Reset to about:blank first so the load event fires reliably on
-       retries, then navigate to the real URL in the next frame.
-       The listener is added inside the rAF so the about:blank load
-       event (which fires instantly) doesn't consume it. */
-    try { els.websiteFrame.src = 'about:blank'; } catch (_) {}
-    requestAnimationFrame(() => {
-      els.websiteFrame.addEventListener('load', onLoad, { once: true });
-      els.websiteFrame.src = CONFIG.SITE_URL;
-    });
+    els.websiteFrame.addEventListener('load', onLoad, { once: true });
+    els.websiteFrame.src = CONFIG.SITE_URL;
   }
 
   function init() {
