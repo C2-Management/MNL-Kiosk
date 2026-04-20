@@ -16,8 +16,23 @@
     <!-- ============================= -->
     <aside class="sidebar" aria-label="Primary navigation">
       <div class="sidebar-brand">
-        <span class="brand-mark">MZL</span>
-        <span class="brand-name">Mugznlugz</span>
+        <div class="brand-row">
+          <span class="brand-mark">MZL</span>
+          <span class="brand-name">Mugznlugz</span>
+        </div>
+        <div class="sidebar-header">
+          <div class="topbar-title" id="topbarTitle">Home</div>
+          <a href="#home" class="logo-link" id="logoLink" aria-label="Return to Home">
+            <img
+              src="./assets/logo.png"
+              alt="Mugznlugz"
+              class="logo-img"
+              id="logoImg"
+              onerror="this.onerror=null; this.style.display='none'; document.getElementById('logoFallback').style.display='inline-flex';"
+            />
+            <span class="logo-fallback" id="logoFallback">Mugznlugz</span>
+          </a>
+        </div>
       </div>
 
       <nav class="nav" id="nav">
@@ -47,24 +62,9 @@
     <!--         MAIN CONTENT          -->
     <!-- ============================= -->
     <main class="main">
-
-      <!-- Top bar -->
-      <header class="topbar">
-        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" type="button">
-          <span></span><span></span><span></span>
-        </button>
-        <div class="topbar-title" id="topbarTitle">Home</div>
-        <a href="#home" class="logo-link" id="logoLink" aria-label="Return to Home">
-          <img
-            src="./assets/logo.png"
-            alt="Mugznlugz"
-            class="logo-img"
-            id="logoImg"
-            onerror="this.onerror=null; this.style.display='none'; document.getElementById('logoFallback').style.display='inline-flex';"
-          />
-          <span class="logo-fallback" id="logoFallback">Mugznlugz</span>
-        </a>
-      </header>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" type="button">
+        <span></span><span></span><span></span>
+      </button>
 
       <!-- ============================= -->
       <!--         HOME PANEL            -->

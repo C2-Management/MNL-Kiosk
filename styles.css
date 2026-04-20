@@ -83,10 +83,23 @@ a { color: inherit; text-decoration: none; }
 
 .sidebar-brand {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
   padding: 4px 8px 14px;
   border-bottom: 1px solid var(--accent-line);
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
 }
 
 .brand-mark {
@@ -201,8 +214,6 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   min-width: 0;
   height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr;
   overflow: hidden;
 }
 
@@ -221,10 +232,11 @@ a { color: inherit; text-decoration: none; }
 }
 
 .topbar-title {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-dim);
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .logo-link {
@@ -266,6 +278,10 @@ a { color: inherit; text-decoration: none; }
 
 .menu-toggle {
   display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 100;
   width: 40px; height: 36px;
   flex-direction: column;
   justify-content: center;
@@ -561,7 +577,7 @@ a { color: inherit; text-decoration: none; }
   }
   .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lift); }
 
-  .menu-toggle { display: inline-flex; }
+  .menu-toggle { display: flex; }
 
   .topbar { padding: 12px 16px; }
   .topbar-title { font-size: 12px; letter-spacing: 1.4px; }
