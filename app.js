@@ -297,20 +297,19 @@ websitePanel.init();
 const coverflow = (() => {
   let images = [];
   let index  = 0;
-  let items  = [];
+  let slots  = [];   // fixed pool of DOM nodes — only 11 total
   let dragging = false;
   let dragStartX = 0;
   let dragStartIndex = 0;
 
-  const TX = 240;
-  const TZ = 220;
-  const RY = 28;
-  const SCALE_STEP  = 0.12;
-  const MIN_SCALE   = 0.5;
+  const TX           = 240;
+  const TZ           = 220;
+  const RY           = 28;
+  const SCALE_STEP   = 0.12;
+  const MIN_SCALE    = 0.5;
   const OPACITY_STEP = 0.2;
-  const MIN_OPACITY  = 0;
   const MAX_VISIBLE  = 5;
-  const RENDER_BUFFER = 10;
+  const SLOT_RADIUS  = 5;   // 11 nodes total: center ± 5
 
   function setImages(list) {
     images = Array.isArray(list) ? list.filter(Boolean) : [];
@@ -320,81 +319,61 @@ const coverflow = (() => {
   }
 
   function build() {
-    if (!els.coverflow) {
-      console.error('[MZL] coverflow element not found in DOM');
-      return;
-    }
-    
+    if (!els.coverflow) return;
     els.coverflow.innerHTML = '';
-    items = [];
+    slots = [];
 
-    images.forEach((img, i) => {
+    for (let s = -SLOT_RADIUS; s <= SLOT_RADIUS; s++) {
       const node = document.createElement('div');
       node.className = 'cf-item';
-      node.setAttribute('role', 'option');
-      node.dataset.index = String(i);
-      node.dataset.loaded = 'false';
+      node.dataset.slot = String(s);
+
+      const img = document.createElement('img');
+      img.referrerPolicy = 'no-referrer';
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
+      img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
+      node.appendChild(img);
 
       node.addEventListener('click', () => {
-        if (i === index) {
-          lightbox.open(i);
-        } else {
-          goTo(i);
-        }
+        const offset = parseInt(node.dataset.slot, 10);
+        if (offset === 0) lightbox.open(index);
+        else goTo(index + offset);
       });
 
       els.coverflow.appendChild(node);
-      items.push(node);
-    });
-    
-    console.log('[MZL] Built', items.length, 'carousel items');
-  }
-
-  function loadImage(itemIndex) {
-    const node = items[itemIndex];
-    if (!node || node.dataset.loaded === 'true') return;
-
-    const img = images[itemIndex];
-    const im = document.createElement('img');
-    im.src = img.src;
-    im.alt = img.alt || `Image ${itemIndex + 1}`;
-    im.referrerPolicy = 'no-referrer';
-    im.style.width = '100%';
-    im.style.height = '100%';
-    im.style.objectFit = 'cover';
-
-    im.addEventListener('error', () => {
-      console.warn(`Failed to load image: ${img.src}`);
-      im.style.display = 'none';
-    }, { once: true });
-
-    node.appendChild(im);
-    node.dataset.loaded = 'true';
+      slots.push({ node, img });
+    }
   }
 
   function render() {
     const n = images.length;
-    if (!n || !els.coverflow) return;
+    if (!n || !slots.length) return;
 
-    for (let d = -RENDER_BUFFER; d <= RENDER_BUFFER; d++) {
-      const i   = ((index + d) % n + n) % n;
-      const abs = Math.abs(d);
+    slots.forEach(({ node, img }, si) => {
+      const s   = si - SLOT_RADIUS;
+      const i   = ((index + s) % n + n) % n;
+      const abs = Math.abs(s);
+      const src = images[i].src;
 
-      loadImage(i);
+      if (img.dataset.src !== src) {
+        img.src = src;
+        img.alt = images[i].alt || '';
+        img.style.display = '';
+        img.dataset.src = src;
+      }
 
-      const node    = items[i];
-      const tx      = d * TX;
+      const tx      = s * TX;
       const tz      = -abs * TZ;
-      const ry      = -d * RY;
-      const scale   = abs === 0 ? 1.25 : Math.max(MIN_SCALE, 1 - abs * SCALE_STEP);
-      const opacity = abs >= MAX_VISIBLE ? 0 : Math.max(MIN_OPACITY, 1 - abs * OPACITY_STEP);
+      const ry      = -s * RY;
+      const scale   = s === 0 ? 1.25 : Math.max(MIN_SCALE, 1 - abs * SCALE_STEP);
+      const opacity = abs >= MAX_VISIBLE ? 0 : Math.max(0, 1 - abs * OPACITY_STEP);
 
-      node.style.transform    = `translate3d(${tx}px, 0, ${tz}px) rotateY(${ry}deg) scale(${scale})`;
-      node.style.opacity      = String(opacity);
-      node.style.zIndex       = String(1000 - abs);
+      node.style.transform     = `translate3d(${tx}px, 0, ${tz}px) rotateY(${ry}deg) scale(${scale})`;
+      node.style.opacity       = String(opacity);
+      node.style.zIndex        = String(1000 - abs);
       node.style.pointerEvents = abs >= MAX_VISIBLE ? 'none' : 'auto';
-      node.classList.toggle('center', d === 0);
-    }
+      node.classList.toggle('center', s === 0);
+    });
   }
 
   function next() { goTo(index + 1); }
