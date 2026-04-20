@@ -96,12 +96,6 @@ document.addEventListener('click', (e) => {
   showPanel(trigger.dataset.panel);
 });
 
-/* Logo always goes home */
-els.logoLink.addEventListener('click', (e) => {
-  e.preventDefault();
-  showPanel('home');
-});
-
 /* Mobile menu toggle */
 els.menuToggle.addEventListener('click', () => {
   els.sidebar.classList.toggle('open');
@@ -463,7 +457,75 @@ function setGalleryStatus(msg, isError = false) {
 
 
 /* =============================================================
+ * CONTACT FORM HANDLER
+ * ============================================================= */
+const contactForm = (() => {
+  function init() {
+    const form = document.getElementById('contactForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const message = document.getElementById('message').value.trim();
+      
+      if (!firstName || !lastName || !email || !message) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+
+      try {
+        const response = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName,
+            lastName,
+            email,
+            phone,
+            message,
+            to: 'chansen@tryc2.com'
+          })
+        });
+
+        if (response.ok) {
+          alert('Thank you! Your message has been sent.');
+          form.reset();
+          showPanel('home');
+        } else {
+          alert('Error sending message. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error sending message. Please try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+  }
+
+  return { init };
+})();
+
+
+/* =============================================================
  * STARTUP
  * ============================================================= */
+contactForm.init();
+
+// Remove the home button as it's redundant with the logo
+const homeBtn = els.navBtns.find(btn => btn.dataset.panel === 'home');
+if (homeBtn) homeBtn.remove();
+
 // Default to Home
 showPanel('home');
