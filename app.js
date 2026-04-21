@@ -267,10 +267,14 @@ websitePanel.init();
 const coverflow = (() => {
   let images = [];
   let index  = 0;
-  let slots  = [];   // fixed pool of DOM nodes — only 11 total
-  let dragging = false;
-  let dragStartX = 0;
-  let dragStartIndex = 0;
+  let slots  = [];
+
+  /* drag state */
+  let dragging      = false;
+  let dragOriginX   = 0;
+  let dragOriginIdx = 0;
+  let lastDragStep  = 0;
+  let rafId         = null;
 
   const TX           = 240;
   const TZ           = 220;
@@ -279,13 +283,15 @@ const coverflow = (() => {
   const MIN_SCALE    = 0.5;
   const OPACITY_STEP = 0.2;
   const MAX_VISIBLE  = 5;
-  const SLOT_RADIUS  = 5;   // 11 nodes total: center ± 5
+  const SLOT_RADIUS  = 5;
+  const DRAG_PX      = 70;   // pixels per image step
 
   function setImages(list) {
     images = Array.isArray(list) ? list.filter(Boolean) : [];
     index = 0;
     build();
     render();
+    preload(0);
   }
 
   function build() {
@@ -294,9 +300,14 @@ const coverflow = (() => {
     slots = [];
 
     for (let s = -SLOT_RADIUS; s <= SLOT_RADIUS; s++) {
+      const abs  = Math.abs(s);
       const node = document.createElement('div');
       node.className = 'cf-item';
       node.dataset.slot = String(s);
+
+      /* static per-slot properties — set once, never in render */
+      node.style.zIndex        = String(1000 - abs);
+      node.style.pointerEvents = abs >= MAX_VISIBLE ? 'none' : 'auto';
 
       const img = document.createElement('img');
       img.referrerPolicy = 'no-referrer';
@@ -305,13 +316,14 @@ const coverflow = (() => {
       node.appendChild(img);
 
       node.addEventListener('click', () => {
+        if (dragging) return;
         const offset = parseInt(node.dataset.slot, 10);
         if (offset === 0) lightbox.open(index);
         else goTo(index + offset);
       });
 
       els.coverflow.appendChild(node);
-      slots.push({ node, img });
+      slots.push({ node, img, s, abs });
     }
   }
 
@@ -319,10 +331,9 @@ const coverflow = (() => {
     const n = images.length;
     if (!n || !slots.length) return;
 
-    slots.forEach(({ node, img }, si) => {
-      const s   = si - SLOT_RADIUS;
+    for (let si = 0; si < slots.length; si++) {
+      const { node, img, s, abs } = slots[si];
       const i   = ((index + s) % n + n) % n;
-      const abs = Math.abs(s);
       const src = images[i].src;
 
       if (img.dataset.src !== src) {
@@ -338,54 +349,79 @@ const coverflow = (() => {
       const scale   = s === 0 ? 1.25 : Math.max(MIN_SCALE, 1 - abs * SCALE_STEP);
       const opacity = abs >= MAX_VISIBLE ? 0 : Math.max(0, 1 - abs * OPACITY_STEP);
 
-      node.style.transform     = `translate3d(${tx}px, 0, ${tz}px) rotateY(${ry}deg) scale(${scale})`;
-      node.style.opacity       = String(opacity);
-      node.style.zIndex        = String(1000 - abs);
-      node.style.pointerEvents = abs >= MAX_VISIBLE ? 'none' : 'auto';
+      node.style.transform = `translate3d(${tx}px,0,${tz}px) rotateY(${ry}deg) scale(${scale})`;
+      node.style.opacity   = String(opacity);
       node.classList.toggle('center', s === 0);
-    });
+    }
   }
 
-  function next() { goTo(index + 1); }
-  function prev() { goTo(index - 1); }
+  /* Preload images ±SLOT_RADIUS ahead of given index so swaps are instant */
+  function preload(idx) {
+    const n = images.length;
+    if (!n) return;
+    const radius = SLOT_RADIUS + 2;
+    for (let d = -radius; d <= radius; d++) {
+      const i = ((idx + d) % n + n) % n;
+      if (images[i]._preloaded) continue;
+      images[i]._preloaded = true;
+      const p = new Image();
+      p.src = images[i].src;
+    }
+  }
 
   function goTo(i) {
     const n = images.length;
     if (!n) return;
     index = ((i % n) + n) % n;
     render();
+    preload(index);
+  }
+
+  function next() { goTo(index + 1); }
+  function prev() { goTo(index - 1); }
+
+  /* ---- drag / pointer ---- */
+  function clientX(e) {
+    return e.touches ? e.touches[0].clientX : e.clientX;
   }
 
   function onPointerDown(e) {
     if (!images.length) return;
-    dragging = true;
-    dragStartX = (e.touches ? e.touches[0].clientX : e.clientX);
-    dragStartIndex = index;
-    els.stage?.setPointerCapture?.(e.pointerId);
+    dragging      = true;
+    dragOriginX   = clientX(e);
+    dragOriginIdx = index;
+    lastDragStep  = 0;
+    els.coverflow.classList.add('is-dragging');
+    if (e.pointerId != null) els.stage.setPointerCapture(e.pointerId);
   }
-  
+
   function onPointerMove(e) {
     if (!dragging) return;
-    const x = (e.touches ? e.touches[0].clientX : e.clientX);
-    const delta = x - dragStartX;
-    const step = Math.round(-delta / 90);
-    if (step !== 0) {
-      goTo(dragStartIndex + step);
-      dragStartX = x;
-      dragStartIndex = index;
-    }
+    if (rafId) return;           // already a frame pending — skip
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      const delta = clientX(e) - dragOriginX;
+      const step  = Math.round(-delta / DRAG_PX);
+      if (step !== lastDragStep) {
+        lastDragStep = step;
+        goTo(dragOriginIdx + step);
+      }
+    });
   }
-  
+
   function onPointerUp() {
+    if (!dragging) return;
     dragging = false;
+    els.coverflow.classList.remove('is-dragging');
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
   }
 
   if (els.stage) {
-    els.stage.addEventListener('pointerdown', onPointerDown);
-    els.stage.addEventListener('pointermove', onPointerMove);
+    els.stage.addEventListener('pointerdown',  onPointerDown, { passive: true });
+    els.stage.addEventListener('pointermove',  onPointerMove, { passive: true });
+    els.stage.addEventListener('pointerup',    onPointerUp);
+    els.stage.addEventListener('pointercancel',onPointerUp);
   }
-  window.addEventListener('pointerup',   onPointerUp);
-  window.addEventListener('pointercancel', onPointerUp);
 
   if (els.prevBtn) els.prevBtn.addEventListener('click', prev);
   if (els.nextBtn) els.nextBtn.addEventListener('click', next);

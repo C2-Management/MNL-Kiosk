@@ -504,9 +504,14 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 30px 60px rgba(0,0,0,0.6);
   cursor: pointer;
   transform-style: preserve-3d;
-  transition: transform 220ms var(--ease),
-              opacity 220ms var(--ease);
+  will-change: transform, opacity;
+  transition: transform 160ms var(--ease),
+              opacity 160ms var(--ease);
   backface-visibility: hidden;
+}
+
+.coverflow.is-dragging .cf-item {
+  transition: none;
 }
 
 .cf-item img {
