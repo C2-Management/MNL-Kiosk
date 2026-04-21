@@ -311,6 +311,7 @@ const coverflow = (() => {
 
       const img = document.createElement('img');
       img.referrerPolicy = 'no-referrer';
+      img.decoding = 'async';
       img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
       img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
       node.appendChild(img);
@@ -349,7 +350,7 @@ const coverflow = (() => {
       const scale   = s === 0 ? 1.25 : Math.max(MIN_SCALE, 1 - abs * SCALE_STEP);
       const opacity = abs >= MAX_VISIBLE ? 0 : Math.max(0, 1 - abs * OPACITY_STEP);
 
-      node.style.transform = `translate3d(${tx}px,0,${tz}px) rotateY(${ry}deg) scale(${scale})`;
+      node.style.transform = `perspective(1400px) translate3d(${tx}px,0,${tz}px) rotateY(${ry}deg) scale(${scale})`;
       node.style.opacity   = String(opacity);
       node.classList.toggle('center', s === 0);
     }
