@@ -109,10 +109,11 @@ function showPanel(name) {
   // close mobile nav
   els.sidebar.classList.remove('open');
 
-  // layout recalculation for gallery so images sit correctly
   if (name === 'gallery') {
-    // wait a frame so the panel is visible
     requestAnimationFrame(() => coverflow.render());
+  }
+  if (name === 'website') {
+    websitePanel.tryEmbed();
   }
 }
 
