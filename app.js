@@ -210,16 +210,22 @@ const websitePanel = (() => {
       handled = true;
       clearTimeout(timer);
 
-      /* contentDocument access throws SecurityError for any cross-origin
-         page — that's our reliable signal the real site loaded.
-         If it doesn't throw, the iframe contains a same-origin browser
-         error page (X-Frame-Options block, network error, etc.). */
-      try {
-        void els.websiteFrame.contentDocument;
-        setFallbackText('This site blocks embedded previews. Open it in a new tab below.');
-      } catch (_) {
-        showIframe();
-      }
+      /* Wait a moment for the iframe to fully initialize, then check if we
+         can access location.href. If that throws SecurityError, the cross-origin
+         page loaded successfully. If it doesn't throw, it's a browser error page. */
+      setTimeout(() => {
+        try {
+          void els.websiteFrame.contentWindow.location.href;
+          setFallbackText('This site blocks embedded previews. Open it in a new tab below.');
+        } catch (e) {
+          // SecurityError = cross-origin page loaded successfully
+          if (e.name === 'SecurityError') {
+            showIframe();
+          } else {
+            setFallbackText('This site blocks embedded previews. Open it in a new tab below.');
+          }
+        }
+      }, 100);
     };
 
     timer = setTimeout(() => {
