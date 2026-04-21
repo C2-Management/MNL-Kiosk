@@ -556,10 +556,51 @@ const contactForm = (() => {
 
 
 /* =============================================================
+ * SUGGESTIONS FORM HANDLER
+ * ============================================================= */
+const suggestionsForm = (() => {
+  function init() {
+    const form = document.getElementById('suggestionsForm');
+    if (!form) return;
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name       = document.getElementById('suggestName').value.trim();
+      const email      = document.getElementById('suggestEmail').value.trim();
+      const suggestion = document.getElementById('suggestion').value.trim();
+
+      if (!suggestion) {
+        document.getElementById('suggestion').focus();
+        return;
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting…';
+
+      console.log('Suggestion submitted:', { name, email, suggestion });
+
+      setTimeout(() => {
+        form.innerHTML = `
+          <div class="form-success">
+            <strong>Thanks for your suggestion!</strong>
+            We appreciate your feedback and will take it into consideration.
+          </div>`;
+      }, 800);
+    });
+  }
+
+  return { init };
+})();
+
+
+/* =============================================================
  * STARTUP
  * ============================================================= */
 lightbox.init();
 contactForm.init();
+suggestionsForm.init();
 
 // Remove the home button as it's redundant with the logo
 const homeBtn = els.navBtns.find(btn => btn.dataset.panel === 'home');
