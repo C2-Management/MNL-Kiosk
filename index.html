@@ -32,11 +32,14 @@
         <button class="nav-btn active" data-panel="home" type="button">
           <span class="nav-dot"></span><span>Home</span>
         </button>
-        <button class="nav-btn" data-panel="suggestions" type="button">
-          <span class="nav-dot"></span><span>Suggestions</span>
+        <button class="nav-btn" data-panel="trims" type="button">
+          <span class="nav-dot"></span><span>Over 250,000 Trims to Choose From</span>
         </button>
-        <button class="nav-btn" data-panel="connect" type="button">
-          <span class="nav-dot"></span><span>Let's Connect</span>
+        <button class="nav-btn" data-panel="garage" type="button">
+          <span class="nav-dot"></span><span>Store and Maintain Cars in Your Garage</span>
+        </button>
+        <button class="nav-btn" data-panel="marketplace" type="button">
+          <span class="nav-dot"></span><span>Buy and Sell Your Cars and Parts</span>
         </button>
       </nav>
     </aside>
@@ -49,87 +52,32 @@
         <span></span><span></span><span></span>
       </button>
 
-      <!-- ============================= -->
-      <!--         HOME PANEL            -->
-      <!-- ============================= -->
+      <!-- HOME -->
       <section class="panel active" id="panel-home">
         <div class="welcome-card">
-          <img
-            src="./assets/mnl.png"
-            alt="Mugznlugz"
-            class="home-image"
-          />
+          <img src="./assets/mnl.png" alt="Mugznlugz" class="home-image" />
         </div>
       </section>
 
-      <!-- ============================= -->
-      <!--       LET'S CONNECT PANEL     -->
-      <!-- ============================= -->
-      <section class="panel info-panel" id="panel-connect" aria-labelledby="connect-title">
-        <div class="info-card">
-          <h2 id="connect-title">Let's Connect</h2>
-          <p class="info-sub">Reach out — we'd love to hear from you. Whether you're interested in bulk purchasing, wholesale partnerships, consignment deals, or vendor relationships, we want to talk. We're also proud to be partnered with C2 Management, a full-service asset resale company that handles all forms of asset liquidation and remarketing — so whatever your business need, we have the connections to help. Fill out the form below and we'll be in touch.</p>
-          <form class="contact-form" id="contactForm" novalidate>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="firstName">First Name <span class="required">*</span></label>
-                <input type="text" id="firstName" name="firstName" autocomplete="given-name" required />
-              </div>
-              <div class="form-group">
-                <label for="lastName">Last Name <span class="required">*</span></label>
-                <input type="text" id="lastName" name="lastName" autocomplete="family-name" required />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="email">Email <span class="required">*</span></label>
-                <input type="email" id="email" name="email" autocomplete="email" required />
-              </div>
-              <div class="form-group">
-                <label for="phone">Phone</label>
-                <input type="tel" id="phone" name="phone" autocomplete="tel" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="message">Message <span class="required">*</span></label>
-              <textarea id="message" name="message" rows="5" required></textarea>
-            </div>
-            <button class="form-submit" type="submit">Send Message</button>
-          </form>
-        </div>
+      <!-- TRIMS -->
+      <section class="panel screenshot-panel" id="panel-trims">
+        <img src="./assets/Screenshot%202026-04-22%20091301.png" alt="Over 250,000 Trims to Choose From" class="screenshot-img" />
       </section>
 
-      <!-- ============================= -->
-      <!--      SUGGESTIONS PANEL        -->
-      <!-- ============================= -->
-      <section class="panel info-panel" id="panel-suggestions" aria-labelledby="suggestions-title">
-        <div class="info-card">
-          <h2 id="suggestions-title">Suggestions</h2>
-          <p class="info-sub">Have an idea or feedback? We want to know. Suggest new part categories to add, photos you'd like to see, pricing feedback, or anything that would make this experience better. Not sure what to say? Tell us what's confusing, what's missing, or what you wish worked differently — even the small stuff counts.</p>
-          <form class="contact-form" id="suggestionsForm" novalidate>
-            <div class="form-group">
-              <label for="suggestName">Your Name</label>
-              <input type="text" id="suggestName" name="suggestName" autocomplete="name" />
-            </div>
-            <div class="form-group">
-              <label for="suggestEmail">Email (optional)</label>
-              <input type="email" id="suggestEmail" name="suggestEmail" autocomplete="email" />
-            </div>
-            <div class="form-group">
-              <label for="suggestion">Your Suggestion <span class="required">*</span></label>
-              <textarea id="suggestion" name="suggestion" rows="6" required></textarea>
-            </div>
-            <button class="form-submit" type="submit">Submit</button>
-          </form>
-        </div>
+      <!-- GARAGE -->
+      <section class="panel screenshot-panel" id="panel-garage">
+        <img src="./assets/Screenshot%202026-04-22%20091347.png" alt="Store and Maintain Cars in Your Garage" class="screenshot-img" />
+      </section>
+
+      <!-- MARKETPLACE -->
+      <section class="panel screenshot-panel" id="panel-marketplace">
+        <img src="./assets/Screenshot%202026-04-22%20091424.png" alt="Buy and Sell Your Cars and Parts" class="screenshot-img" />
       </section>
 
     </main>
   </div>
 
-  <!-- Config -->
   <script src="./config.js" defer></script>
-  <!-- App logic -->
   <script src="./app.js" defer></script>
 </body>
 </html>
