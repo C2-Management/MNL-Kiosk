@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mugznlugz — Portal</title>
-  <meta name="description" content="Mugznlugz — sleek black luxury portal with embedded site and Drive-powered gallery." />
+  <meta name="description" content="Mugznlugz — sleek black luxury portal." />
   <link rel="icon" href="./assets/logo.png" type="image/png" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
@@ -31,12 +31,6 @@
       <nav class="nav" id="nav">
         <button class="nav-btn active" data-panel="home" type="button">
           <span class="nav-dot"></span><span>Home</span>
-        </button>
-        <button class="nav-btn" data-panel="website" type="button">
-          <span class="nav-dot"></span><span>Check out MugzNLugz.com</span>
-        </button>
-        <button class="nav-btn" data-panel="gallery" type="button">
-          <span class="nav-dot"></span><span>Bulk Cadillac Parts For Sale</span>
         </button>
         <button class="nav-btn" data-panel="suggestions" type="button">
           <span class="nav-dot"></span><span>Suggestions</span>
@@ -66,61 +60,6 @@
             class="home-image"
           />
         </div>
-      </section>
-
-      <!-- ============================= -->
-      <!--       WEBSITE PANEL           -->
-      <!-- ============================= -->
-      <section class="panel" id="panel-website" aria-labelledby="website-title">
-        <h2 id="website-title" class="sr-only">Embedded website</h2>
-        <div class="website-shell">
-          <iframe
-            id="websiteFrame"
-            class="website-frame"
-            src="about:blank"
-            title="Mugznlugz website"
-            referrerpolicy="no-referrer-when-downgrade"
-            loading="lazy"
-            allow="autoplay; clipboard-read; clipboard-write; fullscreen; payment"
-          ></iframe>
-
-          <!-- Fallback card shown if embedding is blocked -->
-          <div class="website-fallback" id="websiteFallback" hidden>
-            <div class="fallback-inner">
-              <img id="fallbackPreview" class="fallback-preview" alt="" hidden />
-              <h3>Site preview unavailable</h3>
-              <p id="fallbackText">
-                This website prevents embedded previews. Tap below to open it in a new tab.
-              </p>
-              <div class="fallback-actions">
-                <a class="pill-btn" id="openSiteBtn" href="https://www.mugznlugz.com"
-                   target="_blank" rel="noopener noreferrer">Open Mugznlugz</a>
-                <button class="pill-btn ghost" id="copyLinkBtn" type="button">Copy link</button>
-                <button class="pill-btn ghost" id="retryEmbedBtn" type="button">Retry embed</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============================= -->
-      <!--        GALLERY PANEL          -->
-      <!-- ============================= -->
-      <section class="panel" id="panel-gallery" aria-labelledby="gallery-title">
-        <div class="gallery-header">
-          <div class="gallery-heading">
-            <h2 id="gallery-title">New and Used Stock from Cadillac Reseller</h2>
-            <p id="galleryStatus" class="gallery-status">Loading images...</p>
-          </div>
-        </div>
-
-        <div class="coverflow-stage" id="coverflowStage" aria-roledescription="carousel">
-          <div class="coverflow" id="coverflow" role="listbox"></div>
-          <button class="cf-nav-btn cf-nav-btn--prev" id="prevBtn" type="button" aria-label="Previous image">Prev</button>
-          <button class="cf-nav-btn cf-nav-btn--next" id="nextBtn" type="button" aria-label="Next image">Next</button>
-        </div>
-
-        <p class="gallery-tip">Use ← → keys, arrows, or drag to navigate. Click a side image to center it.</p>
       </section>
 
       <!-- ============================= -->
@@ -188,18 +127,7 @@
     </main>
   </div>
 
-  <!-- Lightbox for full-screen image viewing -->
-  <div class="lightbox" id="lightbox" hidden>
-    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close">&times;</button>
-    <button class="lightbox-prev" id="lightboxPrev" type="button" aria-label="Previous">‹</button>
-    <button class="lightbox-next" id="lightboxNext" type="button" aria-label="Next">›</button>
-    <div class="lightbox-content">
-      <img id="lightboxImg" src="" alt="" />
-      <div class="lightbox-counter" id="lightboxCounter"></div>
-    </div>
-  </div>
-
-  <!-- Config (edit this file to change embed URL, Drive keys, etc.) -->
+  <!-- Config -->
   <script src="./config.js" defer></script>
   <!-- App logic -->
   <script src="./app.js" defer></script>
